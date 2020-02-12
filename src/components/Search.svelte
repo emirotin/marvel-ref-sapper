@@ -7,23 +7,19 @@
   import Character from "./Character";
 
   let search = "";
-  let lastSearch = null;
+  let lastSearch = "";
   let isFetching = false;
   let error = null;
   let data = [];
   let page = 1;
+  let hasMore = false;
 
   let searchPromise = null;
 
-  const onSearchChange = debounce(() => {
-    if (search === lastSearch) {
-      return;
-    }
-
-    lastSearch = search;
+  const fetchData = () => {
     isFetching = true;
-    data = [];
     error = null;
+    hasMore = false;
 
     if (searchPromise) {
       searchPromise.abort();
@@ -36,11 +32,12 @@
 
     searchPromise
       .then(newData => {
+        error = null;
         if (!newData) {
           return;
         }
         data = [...data, ...newData.data.results];
-        error = null;
+        hasMore = newData.data.offset + newData.data.count < newData.data.total;
       })
       .catch(_error => {
         error = _error;
@@ -49,13 +46,34 @@
         isFetching = false;
         searchPromise = null;
       });
+  };
+
+  const onSearchChange = debounce(() => {
+    if (search === lastSearch) {
+      return;
+    }
+
+    lastSearch = search;
+    page = 1;
+    data = [];
+    fetchData();
   });
 
-  onMount(onSearchChange);
+  const loadMore = () => {
+    page += 1;
+    fetchData();
+  };
+
+  onMount(fetchData);
 </script>
 
-<form class="uk-search uk-search-large">
-  <span uk-search-icon />
+<style>
+  .form {
+    width: 100%;
+  }
+</style>
+
+<form class="uk-search uk-search-large form">
   <input
     class="uk-search-input"
     type="search"
@@ -74,6 +92,15 @@
       <Character data={c} />
     {/each}
   </ul>
+{/if}
+
+{#if hasMore}
+  <button
+    class="uk-button uk-button-primary uk-button-large uk-width-1-1"
+    type="button"
+    on:click={loadMore}>
+    Load more...
+  </button>
 {/if}
 
 {#if isFetching}
