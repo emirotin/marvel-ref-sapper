@@ -2,17 +2,35 @@
   import { onMount } from "svelte";
 
   import marvel from "../lib/marvel";
+  import getRelatedCharacters from "../lib/related";
 
   export let id;
 
   let isFetching = false;
   let error = null;
   let data = null;
+  let relatedCharacters = null;
+  let isClient = false;
 
-  const fetchDetails = () => {
+  onMount(() => {
+    isClient = true;
+  });
+
+  const fetchDetails = id => {
     if (!id) {
       return;
     }
+
+    isFetching = true;
+    error = null;
+    data = null;
+    relatedCharacters = null;
+
+    // fetch related characters independently
+    getRelatedCharacters(id).then(_data => {
+      relatedCharacters = _data;
+    });
+
     marvel
       .characters(id)
       .get()
@@ -28,11 +46,13 @@
       });
   };
 
-  onMount(fetchDetails);
+  $: {
+    isClient && fetchDetails(id);
+  }
 </script>
 
 <style>
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     .card {
       flex-direction: column;
     }
@@ -43,6 +63,22 @@
     width: 100%;
     height: auto;
   }
+
+  .pill {
+    height: calc(2rem + 10px);
+    margin: 0.1rem;
+  }
+
+  .imageSmall {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+  }
+
+  .relatedContainer {
+    margin: -0.1rem;
+  }
 </style>
 
 <svelte:head>
@@ -50,21 +86,36 @@
 </svelte:head>
 
 {#if error}
-  <div uk-alert className="uk-alert-danger">{data.error.message}</div>
+  <div uk-alert className="uk-alert-danger">{error.message}</div>
 {/if}
 
 {#if data}
   <div class="uk-card uk-card-default uk-flex card">
-    <div class="uk-card-media-top">
+    <div class="uk-card-media-top uk-width-1-3@m uk-width-1-1">
       <img
         src={marvel.getImage(data.thumbnail)}
         alt={data.name}
         class="image" />
     </div>
-    <div class="uk-card-body">
+    <div class="uk-card-body uk-width-2-3@m uk-width-1-1">
       <h1>{data.name}</h1>
 
       <p>{data.description}</p>
+
+      <h3>Related characters</h3>
+      {#if relatedCharacters}
+        <div class="uk-flex uk-flex-wrap relatedContainer">
+          {#each relatedCharacters as c}
+            <a href={`/hero/${c.id}`} class="uk-badge pill">
+              <img
+                src={marvel.getImage(c.thumbnail)}
+                alt={c.name}
+                class="imageSmall" />
+              &nbsp;{c.name}
+            </a>
+          {/each}
+        </div>
+      {:else}Loading...{/if}
     </div>
   </div>
 {/if}
