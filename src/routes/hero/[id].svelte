@@ -1,6 +1,9 @@
 <script context="module">
+  import Hero from "../../components/Hero";
+
   export function preload({ params }) {
-    return { id: params.id };
+    const { id } = params;
+    return { id };
   }
 </script>
 
@@ -8,4 +11,4 @@
   export let id;
 </script>
 
-<h1>Hero {id}</h1>
+<Hero {id} />
