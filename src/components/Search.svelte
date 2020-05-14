@@ -10,16 +10,23 @@
   let lastSearch = "";
   let isFetching = false;
   let error = null;
-  let data = [];
+  let data = null;
   let page = 1;
   let hasMore = false;
 
   let searchPromise = null;
 
-  const fetchData = () => {
+  const fetchData = ({ reset = false } = {}) => {
     isFetching = true;
     error = null;
     hasMore = false;
+
+    if (reset) {
+      page = 1;
+      data = null;
+    } else {
+      page += 1;
+    }
 
     if (searchPromise) {
       searchPromise.abort();
@@ -32,19 +39,17 @@
 
     searchPromise
       .then(newData => {
-        error = null;
         if (!newData) {
           return;
         }
-        data = [...data, ...newData.data.results];
+        error = null;
+        isFetching = false;
+        searchPromise = null;
+        data = [...(data || []), ...newData.data.results];
         hasMore = newData.data.offset + newData.data.count < newData.data.total;
       })
       .catch(_error => {
         error = _error;
-      })
-      .finally(() => {
-        isFetching = false;
-        searchPromise = null;
       });
   };
 
@@ -52,15 +57,11 @@
     if (search === lastSearch) {
       return;
     }
-
     lastSearch = search;
-    page = 1;
-    data = [];
-    fetchData();
-  });
+    fetchData({ reset: true });
+  }, 50);
 
   const loadMore = () => {
-    page += 1;
     fetchData();
   };
 
@@ -83,7 +84,9 @@
 </form>
 
 {#if error}
-  <div uk-alert className="uk-alert-danger">{error.message}</div>
+  <div uk-alert class="uk-alert uk-alert-danger">
+    <p>{error.message}</p>
+  </div>
 {/if}
 
 {#if data && data.length}
@@ -94,6 +97,16 @@
   </ul>
 {/if}
 
+{#if !isFetching && data && data.length === 0}
+  <div uk-alert class="uk-alert uk-alert-warning">
+    <p>Nothing found</p>
+  </div>
+{/if}
+
+{#if isFetching}
+  <div>Loading...</div>
+{/if}
+
 {#if hasMore}
   <button
     class="uk-button uk-button-primary uk-button-large uk-width-1-1"
@@ -101,8 +114,4 @@
     on:click={loadMore}>
     Load more...
   </button>
-{/if}
-
-{#if isFetching}
-  <div>Loading...</div>
 {/if}

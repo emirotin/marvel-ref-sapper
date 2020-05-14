@@ -86,7 +86,9 @@
 </svelte:head>
 
 {#if error}
-  <div uk-alert className="uk-alert-danger">{error.message}</div>
+  <div uk-alert class="uk-alert uk-alert-danger">
+    <p>{error.message}</p>
+  </div>
 {/if}
 
 {#if data}

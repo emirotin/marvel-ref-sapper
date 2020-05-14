@@ -1,10 +1,7 @@
 <script context="module">
   import Hero from "../../components/Hero";
 
-  export function preload({ params }) {
-    const { id } = params;
-    return { id };
-  }
+  export const preload = ({ params: { id } }) => ({ id });
 </script>
 
 <script>
