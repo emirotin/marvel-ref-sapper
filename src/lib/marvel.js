@@ -1,10 +1,6 @@
 import queryString from "query-string";
 
-import { PAGE_SIZE } from "../config";
-
-const API_PREFIX = "https://marveldb.now.sh/api/v1/public";
-
-const marvel = {};
+import { API_PREFIX, PAGE_SIZE } from "../config";
 
 const RESOURCES = {
   characters: ["comics", "events", "series", "stories"],
@@ -39,13 +35,11 @@ const fetchApi = (path, params) => {
     .then((response) => response.json())
     .catch((err) => {
       if (err instanceof DOMException && err.name === "AbortError") {
-        console.log("aborted", url);
         return;
       }
       throw err;
     });
   p.abort = () => {
-    console.log("abort", url);
     controller.abort();
   };
   return p;
@@ -67,10 +61,12 @@ const createResource = (resource, subResources) => {
   return wrapper;
 };
 
+const marvel = {};
+
 Object.keys(RESOURCES).forEach((resource) => {
   marvel[resource] = createResource(resource, RESOURCES[resource]);
 });
 
-marvel.getImage = (entry) => `${entry.path}.${entry.extension}`;
+marvel.getImage = (entry) => `${entry.path}.${entry.extension}`.replace(/^http:/, "https:");
 
 export default marvel;

@@ -47,7 +47,7 @@ const noralizeCharacters = (characters, currentCharacterId) => {
 const getRelatedCharacters = async (characterId) => {
   const comicsIds = (await characterComics(characterId)).map((c) => c.id);
   const characters = await Promise.all(comicsIds.map(comicsCharacters));
-  return noralizeCharacters(characters, parseInt(characterId));
+  return noralizeCharacters(characters, parseInt(characterId, 10));
 };
 
 export default getRelatedCharacters;

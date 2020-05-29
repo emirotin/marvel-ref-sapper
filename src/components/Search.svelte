@@ -50,6 +50,7 @@
       })
       .catch(_error => {
         error = _error;
+        isFetching = false;
       });
   };
 
